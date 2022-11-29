@@ -101,8 +101,8 @@ def sign_out():
     return redirect(url_for('index'))
 
 
-@login_required
 @app.route('/add_product', methods=['GET', 'POST'])
+@login_required
 def add_product():
     form = forms.CreateProductForm()
     if form.validate_on_submit():
@@ -126,8 +126,8 @@ def show_products():
     return render_template('show_products.html', products=products)
 
 
-@login_required
 @app.route('/add_user_order', methods=['GET', 'POST'])
+@login_required
 def add_user_order():
     form = forms.CreateUserOrderForm()
     if form.validate_on_submit():
@@ -143,8 +143,8 @@ def add_user_order():
     return render_template('add_user_order.html', form=form)
 
 
-@login_required
 @app.route('/show_user_orders')
+@login_required
 def show_user_orders():
     orders = UserOrder.query.filter_by(user_id=current_user.id).all()
     return render_template('show_user_orders.html', data=orders)
