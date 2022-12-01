@@ -1,14 +1,18 @@
 """
--flask-login
--sign up
--sign in (authentication)
+-login_required
+-bcrypt decode
+-update account info
+-flask-admin
+-pagination
 """
 
-from flask import Flask, render_template, redirect, url_for, flash
+from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_bcrypt import Bcrypt
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "?``§=)()%``ÄLÖkhKLWDO=?)(_:;LKADHJATZQERZRuzeru3rkjsdfLJFÖSJ"
@@ -19,7 +23,9 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'sign_in'
 login_manager.login_message_category = 'info'
+
 bcrypt = Bcrypt(app)
+admin = Admin(app, name='Flask Admin')
 
 migrate = Migrate(app, db)
 
@@ -38,6 +44,9 @@ class Product(db.Model):
     name = db.Column(db.String, nullable=False)
     user_orders = db.relationship('UserOrder', back_populates='product')
 
+    def __str__(self):
+        return self.name
+
 
 class UserOrder(db.Model):
     __tablename__ = 'user_order'
@@ -46,6 +55,11 @@ class UserOrder(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     product = db.relationship('Product', back_populates='user_orders')
+
+
+admin.add_view(ModelView(User, db.session))
+admin.add_view(ModelView(Product, db.session))
+admin.add_view(ModelView(UserOrder, db.session))
 
 
 @login_manager.user_loader
@@ -90,7 +104,7 @@ def sign_in():
             return redirect(url_for('sign_in'))
         login_user(user)
         flash(f'Welcome, {user.username}', 'success')
-        return redirect(url_for('index'))
+        return redirect(request.args.get('next') or url_for('index'))
     return render_template('sign_in.html', form=form)
 
 
@@ -148,6 +162,21 @@ def add_user_order():
 def show_user_orders():
     orders = UserOrder.query.filter_by(user_id=current_user.id).all()
     return render_template('show_user_orders.html', data=orders)
+
+
+@app.route('/user_account', methods=['GET', 'POST'])
+@login_required
+def user_account():
+    form = forms.UpdateUserAccount()
+    form.username.data = current_user.username
+    if form.validate_on_submit():
+        user = User.query.get(current_user.id)
+        user.username = form.username.data
+        db.session.add(user)
+        db.session.commit()
+        flash('Your account was updated successfully', 'success')
+        redirect(url_for('user_account'))
+    return render_template('user_account.html', form=form)
 
 
 if __name__ == '__main__':

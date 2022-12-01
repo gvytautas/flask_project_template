@@ -25,6 +25,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('show_user_orders') }}">Show My Orders</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_account') }}">My Account</a>
+                </li>
                 {% if current_user.is_authenticated %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('add_product') }}">Add Product</a>
@@ -70,9 +73,10 @@
 {% endif %}
 {% endif %}
 
-
-{% block content %}
-{% endblock %}
+<div class="container">
+    {% block content %}
+    {% endblock %}
+</div>
 
 <!-- Optional JavaScript; choose one of the two! -->
 

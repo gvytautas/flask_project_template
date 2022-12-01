@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, PasswordField
 from wtforms.validators import DataRequired, EqualTo, ValidationError
 from wtforms_sqlalchemy.fields import QuerySelectField
+from flask_login import current_user
 import main
 
 
@@ -20,9 +21,10 @@ class CreateUserOrderForm(FlaskForm):
 class SignUpForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password1 = PasswordField('Password', validators=[DataRequired()])
-    password2 = PasswordField('Confirm password',
-                              validators=[DataRequired(), EqualTo('password1', message='Passwords do not match!')]
-                              )
+    password2 = PasswordField(
+        'Confirm password',
+        validators=[DataRequired(), EqualTo('password1', message='Passwords do not match!')]
+    )
 
     def validate_username(self, username):
         user = main.User.query.filter_by(username=username.data).first()
@@ -33,3 +35,13 @@ class SignUpForm(FlaskForm):
 class SignInForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
+
+
+class UpdateUserAccount(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            user = main.User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('User name already exists!')
